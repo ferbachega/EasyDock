@@ -1,0 +1,328 @@
+""" A Python Class
+A simple Python graph class, demonstrating the essential 
+facts and functionalities of graphs.
+"""
+
+
+class Graph(object):
+
+    def __init__(self, graph_dict=None):
+        """ initializes a graph object 
+            If no dictionary or None is given, 
+            an empty dictionary will be used
+        """
+        if graph_dict == None:
+            graph_dict = {}
+        self.__graph_dict = graph_dict
+    
+        
+        self.visited = {}
+        for key in self.__graph_dict:
+            self.visited[key]  = False
+    
+    
+	self.pnum   = 0 
+	self.prenum = {}
+    
+    
+    
+    
+    def vertices(self):
+        """ returns the vertices of a graph """
+        return list(self.__graph_dict.keys())
+
+    def edges(self):
+        """ returns the edges of a graph """
+        return self.__generate_edges()
+
+    def add_vertex(self, vertex):
+        """ If the vertex "vertex" is not in 
+            self.__graph_dict, a key "vertex" with an empty
+            list as a value is added to the dictionary. 
+            Otherwise nothing has to be done. 
+        """
+        if vertex not in self.__graph_dict:
+            self.__graph_dict[vertex] = []
+
+    def add_edge(self, edge):
+        """ assumes that edge is of type set, tuple or list; 
+            between two vertices can be multiple edges! 
+        """
+        edge = set(edge)
+        (vertex1, vertex2) = tuple(edge)
+        if vertex1 in self.__graph_dict:
+            self.__graph_dict[vertex1].append(vertex2)
+        else:
+            self.__graph_dict[vertex1] = [vertex2]
+
+    def __generate_edges(self):
+        """ A static method generating the edges of the 
+            graph "graph". Edges are represented as sets 
+            with one (a loop back to the vertex) or two 
+            vertices 
+        """
+        edges = []
+        for vertex in self.__graph_dict:
+            for neighbour in self.__graph_dict[vertex]:
+                if {neighbour, vertex} not in edges:
+                    edges.append({vertex, neighbour})
+        return edges
+
+    def __str__(self):
+        res = "vertices: "
+        for k in self.__graph_dict:
+            res += str(k) + " "
+        res += "\nedges: "
+        for edge in self.__generate_edges():
+            res += str(edge) + " "
+        return res
+
+
+    def find_path(self, start_vertex, end_vertex, path=None):
+        """ find a path from start_vertex to end_vertex 
+            in graph """
+        if path == None:
+            path = []
+        
+        graph = self.__graph_dict
+        
+        path = path + [start_vertex]
+        
+        if start_vertex == end_vertex:
+            return path
+        
+        if start_vertex not in graph:
+            return None
+        
+        for vertex in graph[start_vertex]:
+            if vertex not in path:
+                extended_path = self.find_path(vertex, 
+                                               end_vertex, 
+                                               path)
+                if extended_path: 
+                    return extended_path
+        return None
+
+
+
+    def find_all_paths(self, start_vertex, end_vertex, path=[]):
+        """ find all paths from start_vertex to 
+            end_vertex in graph """
+        graph = self.__graph_dict 
+        path = path + [start_vertex]
+        if start_vertex == end_vertex:
+            return [path]
+        if start_vertex not in graph:
+            return []
+        paths = []
+        for vertex in graph[start_vertex]:
+            if vertex not in path:
+                extended_paths = self.find_all_paths(vertex, 
+                                                     end_vertex, 
+                                                     path)
+                for p in extended_paths: 
+                    paths.append(p)
+        return paths
+
+
+    def vertex_degree(self, vertex):
+        """ The degree of a vertex is the number of edges connecting
+            it, i.e. the number of adjacent vertices. Loops are counted 
+            double, i.e. every occurence of vertex in the list 
+            of adjacent vertices. """ 
+        adj_vertices =  self.__graph_dict[vertex]
+        degree = len(adj_vertices) + adj_vertices.count(vertex)
+        return degree
+
+
+    def find_isolated_vertices(self):
+        """ returns a list of isolated vertices. """
+        graph = self.__graph_dict
+        isolated = []
+        for vertex in graph:
+            print(isolated, vertex)
+            if not graph[vertex]:
+                isolated += [vertex]
+        return isolated
+
+    def delta(self):
+        """ the minimum degree of the vertices """
+        min = 100000000
+        for vertex in self.__graph_dict:
+            vertex_degree = self.vertex_degree(vertex)
+            if vertex_degree < min:
+                min = vertex_degree
+        return min
+        
+    def Delta(self):
+        """ the maximum degree of the vertices """
+        max = 0
+        for vertex in self.__graph_dict:
+            vertex_degree = self.vertex_degree(vertex)
+            if vertex_degree > max:
+                max = vertex_degree
+        return max
+
+
+
+    @staticmethod
+    def erdoes_gallai(dsequence):
+        """ Checks if the condition of the Erdoes-Gallai inequality 
+            is fullfilled 
+            dsequence has to be a valid degree sequence
+        """
+        if sum(dsequence) % 2:
+            # sum of sequence is odd
+            return False
+        for k in range(1,len(dsequence) + 1):
+            left = sum(dsequence[:k])
+            right =  k * (k-1) + sum([min(x,k) for x in dsequence[k:]])
+            if left > right:
+                return False
+        return True
+    
+    def density(self):
+        """ method to calculate the density of a graph """
+        g = self.__graph_dict
+        V = len(g.keys())
+        E = len(self.edges())
+        return 2.0 * E / (V *(V - 1))
+
+
+    def  Busca (self):
+	'''
+	procedimento Busca(G: Grafo)
+	pnum := 0
+	Para Cada vertice v de G:
+	Marque v como nao visitado
+	Para Cada vertice v de G:
+	Se v nao foi visitado:
+	Busca-Prof(v)
+	'''
+
+	graph = self.__graph_dict
+
+
+
+
+	for key in self.visited:
+	    self.visited[key] = False
+
+	for vertex in graph.keys():
+	    if self.visited[vertex] == False:
+		self.Busca_Prof(vertex)
+	
+	print self.prenum
+    
+    
+    def  Busca_Prof(self, v):
+        """  
+        procedimento Busca-Prof(v: vertice)
+            Marque v como visitado
+            pnum := pnum + 1
+            prenum[v] := pnum
+            Para Cada vertice w adjacente a v:
+                Se w nao foi visitado:
+                    Busca-Prof(w)       
+        """
+        self.visited[v] = True
+        self.pnum += 1
+        self.prenum[v] = self.pnum
+        
+	print v, self.__graph_dict[v]
+        
+	for w in self.__graph_dict[v]:
+            if self.visited[v] == False:
+                self.Busca_Prof(w)
+
+    
+    def find_path(self, start_vertex, end_vertex, path=None):
+        """ find a path from start_vertex to end_vertex 
+            in graph """
+        if path == None:
+            path = []
+        
+        graph = self.__graph_dict
+        
+        path = path + [start_vertex]
+        
+        if start_vertex == end_vertex:
+            return path
+        
+        if start_vertex not in graph:
+            return None
+        
+        for vertex in graph[start_vertex]:
+            if vertex not in path:
+                extended_path = self.find_path(vertex, 
+                                               end_vertex, 
+                                               path)
+                if extended_path: 
+                    return extended_path
+        return None
+
+
+
+    
+
+
+    
+
+
+
+
+
+
+if __name__ == "__main__":
+
+    g = { "a" : ["b", 'c'],         #1
+	  "b" : ["d", 'e', "a"],    #2
+          "c" : ["a", "d"],         #3
+          "d" : ["b", "e", "f"],    #4
+          "e" : ["b","c"]     ,     #5
+          "f" : ['d','g', 'h' ],    #6
+	  "g" : ['f', 'h']    ,     #7
+	  "h" : ['f','g']           #8
+	}                           
+
+
+    graph = Graph(g)
+    print graph.visited
+    graph.Busca()
+    #print("Vertices of graph:")
+    #print(graph.vertices())
+    #
+    #print("Edges of graph:")
+    #print(graph.edges())
+    #
+    #print("Add vertex:")
+    #graph.add_vertex("z")
+    #
+    #print("Vertices of graph:")
+    #print(graph.vertices())
+    #
+    #print("Add an edge:")
+    #graph.add_edge({"a","z"})
+    #
+    #print("Vertices of graph:")
+    #print(graph.vertices())
+    #
+    #print("Edges of graph:")
+    #print(graph.edges())
+    #
+    #print('Adding an edge {"x","y"} with new vertices:')
+    #graph.add_edge({"x","y"})
+    #print("Vertices of graph:")
+    #print(graph.vertices())
+    #print("Edges of graph:")
+    #print(graph.edges())
+    #
+    #print graph.find_path("a", "b", path=None)
+    #
+    #print('All paths from vertex "c" to vertex "c":')
+    #path = graph.find_all_paths("a", "c")
+    #print(path)
+    #
+    #
+    #print(graph.vertex_degree("c"))
+    
