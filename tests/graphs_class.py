@@ -2,7 +2,7 @@
 A simple Python graph class, demonstrating the essential 
 facts and functionalities of graphs.
 """
-
+from MOL2Files import *
 
 class Graph(object):
 
@@ -276,19 +276,38 @@ class Graph(object):
 if __name__ == "__main__":
 
     g = { "a" : ["b", 'c'],         #1
-	  "b" : ["d", 'e', "a"],    #2
+	      "b" : ["d", 'e', "a"],    #2
           "c" : ["a", "d"],         #3
-          "d" : ["b", "e", "f"],    #4
+          "d" : ["b", "e", 'f'],    #4
           "e" : ["b","c"]     ,     #5
-          "f" : ['d','g', 'h' ],    #6
-	  "g" : ['f', 'h']    ,     #7
-	  "h" : ['f','g']           #8
+          "f" : ['d', 'g', 'h' ],   #6
+	      "g" : ['f', 'h']    ,     #7
+	      "h" : ['f','g']           #8
 	}                           
 
 
-    graph = Graph(g)
-    print graph.visited
-    graph.Busca()
+
+    g = { 1 : [2, 3],         #1
+	      2 : [4, 5, 1],    #2
+          3 : [1, 4],         #3
+          4 : [2, 5, 6],    #4
+          5 : [2, 3]     ,     #5
+          6 : [4, 7, 8],   #6
+	      7 : [6, 8]    ,     #7
+	      8 : [6, 7]           #8
+	}  
+
+
+    atoms, _graph = load_mol2_files (infile = '/home/fernando/programs/EasyDock/mol2/com7.mol2', VMSession =  None, gridsize = 3)
+
+
+    #graph = Graph(g)
+    graph =Graph(_graph)
+    #print graph.visited
+    #graph.Busca()
+    
+    
+    #print graph.edges()
     #print("Vertices of graph:")
     #print(graph.vertices())
     #
@@ -317,12 +336,34 @@ if __name__ == "__main__":
     #print("Edges of graph:")
     #print(graph.edges())
     #
-    #print graph.find_path("a", "b", path=None)
+    
+    
+    
+    #print graph.find_path("d", "f", path=None)
     #
     #print('All paths from vertex "c" to vertex "c":')
-    #path = graph.find_all_paths("a", "c")
+    #path = graph.find_all_paths("d", "f")
     #print(path)
     #
     #
     #print(graph.vertex_degree("c"))
     
+    not_alone_atoms = []
+    
+    for key in _graph:
+        degree = graph.vertex_degree(key)
+        print(key, degree)
+        if degree > 1:
+            not_alone_atoms.append(key)
+
+    _buffer = []
+    for key in not_alone_atoms:
+        _buffer.append(key)
+        for key2 in not_alone_atoms:
+            if key2 in _buffer:
+                pass
+            else:
+                path = graph.find_all_paths(key, key2)
+                if len(path) == 1:
+                    if len(path [0]) == 2:
+                        print(key+1, key2+1, len(path),len(path [0]) )    
