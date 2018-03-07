@@ -23,6 +23,8 @@
 #  
 from pprint import pprint
 import numpy as np
+import MolSystem
+
 
 
 '''
@@ -115,6 +117,9 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
     #pdb_file_lines  = frame.split('\n')   
     #atoms = (pool.map(parse_pdb_line, pdb_file_lines))
     
+    
+    
+    
     atoms  = []
     frames = []
     frame_coordinates = []
@@ -144,7 +149,20 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
             gridpos  = [int(at_pos[0]/gridsize), int(at_pos[1]/gridsize), int(at_pos[2]/gridsize)]
             
             atoms.append([index, at_name,  at_pos, at_resi, at_resn, at_ch, at_symbol, [], gridpos ])
-
+            
+            atom =  MolSystem.Atom (name         = at_name,
+                                    index        = index, 
+                                    symbol       = 'X', 
+                                    pos          = at_pos, 
+                                    resi         = at_resi, 
+                                    resn         = at_resn, 
+                                    chain        = at_ch, 
+                                    atom_id      = 0, 
+                                    molecule     = None,
+                                    #Vobject_id   = None, 
+                                    #Vobject_name = '', 
+                                    #Vobject      = None
+                                    )
 
 
             #atoms.append([index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch])
@@ -235,17 +253,41 @@ def load_mol2_files (infile = None, VMSession =  None, gridsize = 3):
     with open(infile, 'r') as mol2_file:
         pdbtext = mol2_file.read()
 
-        molecules     =  pdbtext.split('@<TRIPOS>MOLECULE')
-        firstmolecule =  molecules[1].split('@<TRIPOS>ATOM')
-        header        =  firstmolecule[0]
-        firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
-        raw_atoms     =  firstmolecule[0]
-        bonds         =  firstmolecule[1]
+        raw_molecules     =  pdbtext.split('@<TRIPOS>MOLECULE')
+        
+        for raw_molecule in raw_molecules:
+            #print raw_molecule
+            firstmolecule =  raw_molecule.split('@<TRIPOS>ATOM')
+            print len(firstmolecule)
+            
+            
+            
+            #header        =  firstmolecule[0]
+            #print len(firstmolecule)
+            #print firstmolecule[1]
+            #firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
+            #raw_atoms     =  firstmolecule[0]
+            #bonds         =  firstmolecule[1]
+            
+            
+            #header    = header.split('\n')
+            #raw_atoms = raw_atoms.split('\n')
+            #bonds     = bonds.split('\n')
+            
+            #atoms = get_atom_list_from_mol2_frame(raw_atoms = raw_atoms, frame = True,  gridsize = gridsize)
+            #bonds, index_bonds, index_bonds_pairs = get_bonds(bonds)
+
+        #firstmolecule =  molecules[1].split('@<TRIPOS>ATOM')
+        #header        =  firstmolecule[0]
+        #firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
+        #raw_atoms     =  firstmolecule[0]
+        #bonds         =  firstmolecule[1]
 
 
-    header    = header.split('\n')
-    raw_atoms = raw_atoms.split('\n')
-    bonds     = bonds.split('\n')
+
+    #header    = header.split('\n')
+    #raw_atoms = raw_atoms.split('\n')
+    #bonds     = bonds.split('\n')
     
     #print header
     #print raw_atoms
