@@ -2,7 +2,7 @@
 A simple Python graph class, demonstrating the essential 
 facts and functionalities of graphs.
 """
-from MOL2Files import *
+#from MOL2Files import *
 
 class Graph(object):
 
@@ -189,7 +189,83 @@ class Graph(object):
         return 2.0 * E / (V *(V - 1))
 
 
-    def  Busca (self):
+    
+    
+    
+    def find_rotatable_blocks (self, v1, v2):
+	""" Function doc 
+	
+	  o---o          o---o
+	 /     \        /     \
+	o       o------o       o
+	 \     /v1    v2\     /
+	  o---o          o---o
+			      \
+			       o---o   
+			      /     \  
+			     o       o
+			      \     /  
+			       o---o   
+			       
+	|----------|------------------!
+	
+	   block 1       block 2
+	   (list)        (list)
+	
+	Find all the "o" that is bonded to v2 but not with v1 
+    
+	"""
+	
+	graph  = self.__graph_dict
+	self.block = []
+	
+	for key in self.visited:
+	    self.visited[key] = False
+
+	self.visited[v2]  = True
+	#print self.visited
+	#print v1, v2, self.visited[v2]
+
+	for vertex in graph[v2]:
+	    if vertex == v1:
+		pass
+	    
+	    else:
+		#print v1, v2, vertex, graph[v2]
+		
+		if self.visited[vertex] == False:
+		    self.busca_block_prof(vertex)
+		    
+		    #block2 += block
+
+	
+	print v1, v2, self.block
+	#print self.visited
+	#return block2
+    
+    
+    
+    def busca_block_prof (self, vertex):
+	""" Function doc """
+        self.visited[vertex] = True
+	self.block.append(vertex)
+	
+	#print vertex, self.__graph_dict[vertex]
+	
+	for w in self.__graph_dict[vertex]:
+            
+	    if self.visited[w] == False:
+                self.busca_block_prof(w)
+	
+	#return block
+    
+    
+    
+    
+    
+    
+    
+    def  Busca (self, excluded = None):
 	'''
 	procedimento Busca(G: Grafo)
 	pnum := 0
@@ -209,8 +285,11 @@ class Graph(object):
 	    self.visited[key] = False
 
 	for vertex in graph.keys():
-	    if self.visited[vertex] == False:
-		self.Busca_Prof(vertex)
+	    if vertex == excluded:
+		pass
+	    else:
+		if self.visited[vertex] == False:
+		    self.Busca_Prof(vertex)
 	
 	print self.prenum
     
@@ -274,7 +353,7 @@ class Graph(object):
 
 
 if __name__ == "__main__":
-
+    '''
     g = { "a" : ["b", 'c'],         #1
 	      "b" : ["d", 'e', "a"],    #2
           "c" : ["a", "d"],         #3
@@ -296,13 +375,13 @@ if __name__ == "__main__":
 	      7 : [6, 8]    ,     #7
 	      8 : [6, 7]           #8
 	}  
+    '''
 
-
-    atoms, _graph = load_mol2_files (infile = '/home/fernando/programs/EasyDock/mol2/com7.mol2', VMSession =  None, gridsize = 3)
+    #atoms, _graph = load_mol2_files (infile = '/home/fernando/programs/EasyDock/mol2/com7.mol2', VMSession =  None, gridsize = 3)
 
 
     #graph = Graph(g)
-    graph =Graph(_graph)
+    #graph =Graph(g)
     #print graph.visited
     #graph.Busca()
     
@@ -348,6 +427,8 @@ if __name__ == "__main__":
     #
     #print(graph.vertex_degree("c"))
     
+    
+    '''
     not_alone_atoms = []
     
     for key in _graph:
@@ -367,3 +448,4 @@ if __name__ == "__main__":
                 if len(path) == 1:
                     if len(path [0]) == 2:
                         print(key+1, key2+1, len(path),len(path [0]) )    
+    '''

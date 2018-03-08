@@ -1,28 +1,101 @@
+import graphs_class as gclass
+
 
 class Molecule:
     """ Class doc """
     
-    def __init__ (self, atoms    = []   , 
-                        bonds    = []   , 
-                        name     = 'UNK', 
-                        index    = None ,
-                        #chain   = None,
-                        #Vobject = None
+    def __init__ (self, 
+    
+                        name              = None ,
+                        size              = None ,
+                        _type             = None ,
+                        charge            = None ,
+                        info              = None ,
+                        index             = None ,
+
+                        atoms             = []   , 
+                        bonds             = []   , 
+                        
+                        #bonds
+                        index_bonds_pairs = None ,
+                        bond_type         = None , 
+                        
                         ):
         """ Class initialiser """
-        self.atoms      = atoms
-        self.bonds      = bonds
-        
-        self.bond_types = {}
-        
         self.name       = name
+        self.size       = size  
+        self._type      = _type 
+        self.charge     = charge
+        self.info       = info  
         self.index      = index
+
         
         
-        #self.resi     = index
-        #self.resn     = name
-        #self.chain    = chain
-        #self.Vobject  = Vobject
+        
+        
+        
+        self.atoms      = atoms
+        for atom in self.atoms:
+            atom.molecule =  self
+        
+        # -------------- Bonds --------------------
+        self.bonds             = bonds
+        self.bond_type         = bond_type
+        self.index_bonds_pairs = index_bonds_pairs
+        # -----------------------------------------
+
+        #-----------------------------------------------------------------------------------------------------------#
+        self.rotatable_bonds = []
+        
+        self.graph = {}                                                        
+        for atom in self.atoms:                                                
+            self.graph[atom.index] = []                                        
+                                                                               
+        for bond in self.index_bonds_pairs:                                    
+            self.graph [ bond[0]].append(bond[1])                              
+            self.graph [ bond[1]].append(bond[0])                              
+                                                                               
+                                                                               
+        self.Graph = gclass.Graph(self.graph)                                  
+                                                                               
+        not_alone_atoms = []                                                   
+                                                                               
+        for key in self.graph:                                                 
+            degree = self.Graph.vertex_degree(key)                             
+            print(key, degree)                                                 
+            if degree > 1:                                                     
+                not_alone_atoms.append(key)                                    
+                                                                               
+        _buffer = []                                                           
+        for key in not_alone_atoms:                                            
+            _buffer.append(key)                                                
+            for key2 in not_alone_atoms:                                       
+                if key2 in _buffer:                                            
+                    pass                                                       
+                else:                                                          
+                    path = self.Graph.find_all_paths(key, key2)                
+                    if len(path) == 1:                                         
+                        if len(path [0]) == 2:                                 
+                            
+                            print(key+1, key2+1, len(path),len(path [0]), self.bond_type[(key,key2)]  )     #
+                            self.rotatable_bonds.append([key,key2])
+        print self.rotatable_bonds
+        
+        for rotatable_bond in self.rotatable_bonds:
+            self.Graph.find_rotatable_blocks(rotatable_bond[0], rotatable_bond[1])
+        #-----------------------------------------------------------------------------------------------------------#
+        
+        
+        
+        
+        
+
+
+        
+        
+        
+         
+
 
 
 

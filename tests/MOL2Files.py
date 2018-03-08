@@ -148,7 +148,7 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
 
             gridpos  = [int(at_pos[0]/gridsize), int(at_pos[1]/gridsize), int(at_pos[2]/gridsize)]
             
-            atoms.append([index, at_name,  at_pos, at_resi, at_resn, at_ch, at_symbol, [], gridpos ])
+            #atoms.append([index, at_name,  at_pos, at_resi, at_resn, at_ch, at_symbol, [], gridpos ])
             
             atom =  MolSystem.Atom (name         = at_name,
                                     index        = index, 
@@ -165,23 +165,8 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
                                     )
 
 
-            #atoms.append([index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch])
-            
-            #atom     = Atom(name      =  at_name, 
-            #                index     =  index, 
-            #                pos       =  at_pos, 
-            #                resi      =  at_res_i, 
-            #                resn      =  at_res_n, 
-            #                chain     =  at_ch, 
-            #                )
-            #atoms.append(atom)
-            #frame_coordinates.append(float(line[2]))
-            #frame_coordinates.append(float(line[3]))
-            #frame_coordinates.append(float(line[4]))
-    #frame_coordinates = np.array(frame_coordinates, dtype=np.float32)
-    #frames.append(frame_coordinates)
-    #print (frames)
-    print (atoms)
+            atoms.append(atom)
+    #print (atoms)
     return atoms
 
 def get_bonds (raw_bonds):
@@ -191,6 +176,10 @@ def get_bonds (raw_bonds):
     index_bonds_pairs_orders = []
     
     bonds = {}
+    
+    bond_type = {}
+    
+    
     
     #print (raw_bonds)
     print ('Obtain bonds from original MOL2 file')
@@ -214,6 +203,9 @@ def get_bonds (raw_bonds):
                 bonds[index] = [atom1, atom2, order]
                 index_bonds_pairs.append([atom1,atom2])
                 
+                bond_type[(atom1, atom2)] = order
+                bond_type[(atom2, atom1)] = order
+                
         '''
         if len(line) == 4:
             index    = int(line[0])            
@@ -227,9 +219,10 @@ def get_bonds (raw_bonds):
             
             index_bonds_pairs_orders.append(order)
         '''
+    print bond_type
     #print index_bonds_pairs
     #return [bonds, index_bonds, index_bonds_pairs]
-    return bonds, index_bonds, index_bonds_pairs
+    return bonds, index_bonds, index_bonds_pairs, bond_type
 
 
 
@@ -241,7 +234,43 @@ def get_bonds (raw_bonds):
 
 
 
+def parser_raw_mol2_info (raw_molecule, log = False):
+    """ Function doc """
+    firstmolecule =  raw_molecule.split('@<TRIPOS>ATOM')
+    header        =  firstmolecule[0]
+    firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
+    raw_atoms     =  firstmolecule[0]
+    bonds         =  firstmolecule[1]
+   
+    header    = header.split('\n')
+    #print header
+    mol_name   = header[1]
+    mol_size   = header[2]
+    mol_type   = header[3]
+    mol_charge = header[4]
+    mol_info   = header[5]
+    
+    raw_atoms = raw_atoms.split('\n')
+    bonds     = bonds.split('\n')
+    
+    atoms = get_atom_list_from_mol2_frame(raw_atoms = raw_atoms, frame = True,  gridsize = 3)
+    bonds, index_bonds, index_bonds_pairs, bond_type = get_bonds(bonds)
 
+    
+    
+    molecule = MolSystem.Molecule ( name              = mol_name  ,
+                                    size              = mol_size  ,
+                                    _type             = mol_type  ,
+                                    charge            = mol_charge,
+                                    info              = mol_info  ,
+                                    index             = None         ,
+
+                                    atoms             = atoms     , 
+                                    bonds             = bonds     , 
+                                    index_bonds_pairs = index_bonds_pairs ,
+                                    bond_type         = bond_type         ,
+                                    )
+    return molecule
 
 
 def load_mol2_files (infile = None, VMSession =  None, gridsize = 3):
@@ -249,100 +278,43 @@ def load_mol2_files (infile = None, VMSession =  None, gridsize = 3):
     print ('\nstarting: parse_mol2')
 
     #initial = time.time()
-
+    
+    
+    molecule_list = []
+    
+    
     with open(infile, 'r') as mol2_file:
         pdbtext = mol2_file.read()
 
         raw_molecules     =  pdbtext.split('@<TRIPOS>MOLECULE')
         
-        for raw_molecule in raw_molecules:
-            #print raw_molecule
-            firstmolecule =  raw_molecule.split('@<TRIPOS>ATOM')
-            print len(firstmolecule)
-            
-            
-            
-            #header        =  firstmolecule[0]
-            #print len(firstmolecule)
-            #print firstmolecule[1]
-            #firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
-            #raw_atoms     =  firstmolecule[0]
-            #bonds         =  firstmolecule[1]
-            
-            
-            #header    = header.split('\n')
-            #raw_atoms = raw_atoms.split('\n')
-            #bonds     = bonds.split('\n')
-            
-            #atoms = get_atom_list_from_mol2_frame(raw_atoms = raw_atoms, frame = True,  gridsize = gridsize)
-            #bonds, index_bonds, index_bonds_pairs = get_bonds(bonds)
-
-        #firstmolecule =  molecules[1].split('@<TRIPOS>ATOM')
-        #header        =  firstmolecule[0]
-        #firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
-        #raw_atoms     =  firstmolecule[0]
-        #bonds         =  firstmolecule[1]
-
-
-
-    #header    = header.split('\n')
-    #raw_atoms = raw_atoms.split('\n')
-    #bonds     = bonds.split('\n')
-    
-    #print header
-    #print raw_atoms
-    #print bonds
-
-    #'''
-    atoms = get_atom_list_from_mol2_frame(raw_atoms = raw_atoms, frame = True,  gridsize = gridsize)
-    bonds, index_bonds, index_bonds_pairs = get_bonds(bonds)
-    
-
-    #print index_bonds
-    
-    
-    graph = {}
-    for atom in atoms:
-        graph[atom[0]] = []
+        number_of_molecules = len(raw_molecules)
+        print ('Number of molecules:', number_of_molecules)
         
-    for bond in index_bonds_pairs:
-        pass
-        #print bond, bond[0], bond[1]#, atoms[bond[0]], atoms[bond[1]]
-        #print graph [bond[0]]
-        graph [ bond[0]].append(bond[1])
-        graph [ bond[1]].append(bond[0])
+        n = 1
+        for raw_molecule in raw_molecules:
+            #print ('molecule', n)
+            #print raw_molecule
+            
+            if '@<TRIPOS>ATOM' in raw_molecule:
+                
+                
+                
+                print ('molecule', n, True )
+                molecule = parser_raw_mol2_info(raw_molecule, log = False)
+                molecule_list.append(molecule)
+            
+            else: 
+                print ('molecule', n, False)
+            n += 1            
     
-    print graph
-    return atoms, graph
-    
-    #-------------------------------------------------------------------------------------------
-    #                                Bonded and NB lists 
-    #-------------------------------------------------------------------------------------------
-    # atoms, bonds_full_indexes, bonds_pair_of_indexes, NB_indexes_list = cdist.generete_full_NB_and_Bonded_lists(atoms)
-    #-------------------------------------------------------------------------------------------
-    #'''
-    '''
-    
-    #-------------------------------------------------------------------------------------------
-    #                         Building   V I S M O L    O B J
-    #-------------------------------------------------------------------------------------------
-    name = os.path.basename(infile)
-    vismol_object  = VismolObject.VismolObject(name        = name, 
-                                               atoms       = atoms, 
-                                               VMSession   = VMSession, 
-                                               trajectory  = frames)
-    
-    
-    vismol_object._generate_atomtree_structure()
-    vismol_object._generate_atom_unique_color_id()
-    vismol_object.index_bonds       = bonds_full_indexes
-    vismol_object.index_bonds_pairs = bonds_pair_of_indexes
-    vismol_object.non_bonded_atoms  = NB_indexes_list
-    #-------------------------------------------------------------------------------------------
-    return vismol_object
-    '''
+               
+    return molecule_list
 
 
-#atoms, graph = load_mol2_files (infile = '/home/fernando/programs/EasyDock/mol2/com3.mol2', VMSession =  None, gridsize = 3)
 
+
+
+
+load_mol2_files (infile = '/home/fernando/programs/EasyDock/mol2/com7.mol2', VMSession =  None, gridsize = 3)
 
