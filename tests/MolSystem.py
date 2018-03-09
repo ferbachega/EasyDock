@@ -44,9 +44,14 @@ class Molecule:
         self.index_bonds_pairs = index_bonds_pairs
         # -----------------------------------------
 
+        
+        
+        
+        
         #-----------------------------------------------------------------------------------------------------------#
         self.rotatable_bonds = []
         
+        # building the graph 
         self.graph = {}                                                        
         for atom in self.atoms:                                                
             self.graph[atom.index] = []                                        
@@ -57,7 +62,9 @@ class Molecule:
                                                                                
                                                                                
         self.Graph = gclass.Graph(self.graph)                                  
-                                                                               
+
+        #------------------------------------------------------------------------------------------------------------#
+        # finding atoms with only one connection                                                                        
         not_alone_atoms = []                                                   
                                                                                
         for key in self.graph:                                                 
@@ -65,7 +72,10 @@ class Molecule:
             print(key, degree)                                                 
             if degree > 1:                                                     
                 not_alone_atoms.append(key)                                    
-                                                                               
+        #------------------------------------------------------------------------------------------------------------#
+        
+        
+        #------------------------------------------------------------------------------------------------------------#
         _buffer = []                                                           
         for key in not_alone_atoms:                                            
             _buffer.append(key)                                                
@@ -77,16 +87,67 @@ class Molecule:
                     if len(path) == 1:                                         
                         if len(path [0]) == 2:                                 
                             
-                            print(key+1, key2+1, len(path),len(path [0]), self.bond_type[(key,key2)]  )     #
+                            #for  atom in 
+                            
+                            #print(key+1, key2+1, len(path),len(path [0]), self.bond_type[(key,key2)]  )     #
                             self.rotatable_bonds.append([key,key2])
         print self.rotatable_bonds
         
-        for rotatable_bond in self.rotatable_bonds:
+        
+        
+        
+        
+        # --------------------------------------------------------
+        '''
+        finding the methyl groups
+        '''
+        _buffer = []
+        
+        methyl_groups = []
+        for bond in self.rotatable_bonds:
+            for vertex_v in bond:
+                if vertex_v in _buffer:
+                    pass
+                else:
+                    _buffer.append(vertex_v)
+                    n = 0 
+                    
+                    for vertex_w in self.graph[vertex_v]:
+                        
+                        if self.atoms[vertex_w].name == 'H':
+                            print vertex_v, vertex_w, 'H'
+                            n += 1
+                    
+                    if n == 3:
+                        print vertex_v, 'methyl'
+                        methyl_groups.append(vertex_v)
+        # --------------------------------------------------------
+        
+        
+        
+        # --------------------------------------------------------
+        '''excluding methyl groups from rotatable bonds'''
+
+        self.rotatable_bonds_edited  = []
+        for bond in self.rotatable_bonds:
+            if bond[0] in methyl_groups or bond[1] in methyl_groups:
+                pass
+            else:
+                self.rotatable_bonds_edited.append(bond)
+        # --------------------------------------------------------
+               
+        
+        
+        
+        
+        
+        
+        for rotatable_bond in self.rotatable_bonds_edited:
             self.Graph.find_rotatable_blocks(rotatable_bond[0], rotatable_bond[1])
         #-----------------------------------------------------------------------------------------------------------#
         
         
-        
+        self.Graph.find_rotatable_blocks2(rot_bonds = self.rotatable_bonds_edited)
         
         
 

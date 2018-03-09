@@ -192,6 +192,106 @@ class Graph(object):
     
     
     
+    
+    
+    
+    def find_rotatable_blocks2 (self, rot_bonds = []):
+	""" Function doc 
+	
+	  o---o          o---o
+	 /     \        /     \
+	o       o------o       o
+	 \     /v1    v2\     /
+	  o---o          o---o
+			      \
+			       o---o   
+			      /     \  
+			     o       o
+			      \     /  
+			       o---o   
+			       
+	|----------|------------------!
+	
+	   block 1       block 2
+	   (list)        (list)
+	
+	Find all the "o" that is bonded to v2 but not with v1 
+    
+	"""
+	
+	blocks = {}
+	graph  = self.__graph_dict
+	
+	edited_graph = graph
+	_buffer      = [] 
+	
+	for bond in rot_bonds:
+	    
+	    edited_graph[bond[0]].remove(bond[1])
+	    edited_graph[bond[1]].remove(bond[0])
+	    if bond[0] in _buffer :
+		pass
+	    else:
+		_buffer.append(bond[0])
+		
+	    if bond[1] in _buffer :
+		pass
+	    else:
+		_buffer.append(bond[1])
+	
+	print graph
+	print edited_graph
+	print _buffer
+	
+	
+	#print vertex_v
+	#for key in self.visited:
+	#    self.visited[key] = False
+	
+	for vertex_v in _buffer:
+	    print 'vertex', vertex_v
+	    self.busca_profunda ( edited_graph, vertex_v)
+	    
+	    print '\n'
+    
+    def busca_profunda (self, grafo, vertex_v):
+	""" Function doc """
+	
+	block  = []
+	block.append(vertex_v)
+	
+	for key in self.visited:
+            self.visited[key] = False
+	    
+	for vertex_w in grafo[vertex_v]:
+	    if self.visited[vertex_w] == False:
+		self.busca_profunda2(grafo, vertex_w)
+	    	    
+
+    def busca_profunda2 (self, grafo, vertex_w):
+	""" Function doc """
+
+        self.visited[vertex_w] = True
+	print vertex_w
+	for vertex_k in grafo[vertex_w]:
+            
+	    if self.visited[vertex_k] == False:
+                self.busca_profunda2(grafo, vertex_k)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
     def find_rotatable_blocks (self, v1, v2):
 	""" Function doc 
 	
