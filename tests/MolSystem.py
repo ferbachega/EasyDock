@@ -59,8 +59,7 @@ class Molecule:
         for bond in self.index_bonds_pairs:                                    
             self.graph [ bond[0]].append(bond[1])                              
             self.graph [ bond[1]].append(bond[0])                              
-                                                                               
-                                                                               
+                                                                      
         self.Graph = gclass.Graph(self.graph)                                  
 
         #------------------------------------------------------------------------------------------------------------#
@@ -142,22 +141,79 @@ class Molecule:
         
         
         
-        for rotatable_bond in self.rotatable_bonds_edited:
-            self.Graph.find_rotatable_blocks(rotatable_bond[0], rotatable_bond[1])
+        #for rotatable_bond in self.rotatable_bonds_edited:
+        #    self.Graph.find_rotatable_blocks(rotatable_bond[0], rotatable_bond[1])
         #-----------------------------------------------------------------------------------------------------------#
         
-        
+        #_ATOMLINEFORMAT1    = "{:<6s}{:5d} {:<4s}{:1s}{:3s} {:1s}{:4s}{:2s}  {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}      {:<4s}{:2s}{:2s}"
+
         self.Graph.find_rotatable_blocks2(rot_bonds = self.rotatable_bonds_edited)
         
+        self.block_connections = {}
+        for block in self.Graph.blocks:
+            self.block_connections[block] = []
+        
+        
+        for bond in self.rotatable_bonds_edited:
+            
+            blocka = None
+            blockb = None 
+            
+            for block in self.Graph.blocks:
+                if bond[0] in self.Graph.blocks[block]:
+                    #print bond[0], block,  self.Graph.blocks[block]
+                    blocka = block
+                if bond[1] in self.Graph.blocks[block]:
+                    #print bond[1], block,  self.Graph.blocks[block]
+                    blockb = block
+                #print bond, block, self.Graph.blocks[block]
+            
+            #print  bond[0], bond[1], blocka, blockb
+            self.block_connections[blocka].append([blockb,[bond[0], bond[1]]])
+            self.block_connections[blockb].append([blocka,[bond[1], bond[0]]])
+            #self.block_connections[blocka] = [blockb, [bond[0], bond[1]]]
+            #self.block_connections[blockb] = [blocka, [bond[1], bond[0]]]
+        
+        print self.block_connections
+        #self.export_PDB (fileout = 'molecule.pdb')
+        
+        
+    def export_PDB (self, fileout = 'molecule.pdb'):
+        """ Function doc """
+        fileout = open(fileout, 'w')
+        
+        lines = []
+        _ATOMLINEFORMAT1    = "{:<6s}{:5d} {:<4s}{:1s}{:3s} {:1s}{:4s}{:2s}  {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}      {:<4s}{:2s}{:2s}\n"
+        for block in self.Graph.blocks:
+            lines.append('REMARK Block '+ str(block)  +' \n')
+            print 'REMARK Block ', block, '\n'
+            
+            for index in self.Graph.blocks[block]:
+                at = self.atoms[index]
+                #print "ATOM  ", index, self.atoms[index].name,  self.atoms[index].pos
+                lines.append(_ATOMLINEFORMAT1.format ( "ATOM", index + 1, at.name , " ", 'UNK', 'A' , '', str(block),
+                                                  
+                                                  at.pos[0], at.pos[1], at.pos[2], 0.00, at.charge, '', at.name, " " ))
+                print ( _ATOMLINEFORMAT1.format ( "ATOM", index + 1, at.name , " ", 'UNK', 'A' , '', str(block),
+                                                  
+                                                  at.pos[0], at.pos[1], at.pos[2], 0.00, at.charge, '', at.name, " " ) )
+        
+        fileout.writelines(lines)
         
 
 
+class Block:
+    """ Class doc """
+    
+    def __init__ (self):
+        """ Class initialiser """
+        self.atoms = []
         
+        self.connections = []
         
+        self.bonds
         
-         
-
-
+        pass
 
 
 class Atom:
@@ -172,6 +228,7 @@ class Atom:
                         chain        = '', 
                         atom_id      = 0, 
                         molecule     = None,
+                        charge       = 0.00,
                         #Vobject_id   = None, 
                         #Vobject_name = '', 
                         #Vobject      = None
@@ -188,6 +245,7 @@ class Atom:
         self.resn     = resn    #
         self.chain    = chain   #
         self.molecule = molecule
+        self.charge   = charge
         #self.Vobject = Vobject
         #self.residue = residue    
 

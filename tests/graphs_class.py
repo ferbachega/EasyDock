@@ -248,17 +248,67 @@ class Graph(object):
 	#for key in self.visited:
 	#    self.visited[key] = False
 	
+	
+	#self.blocks  = {}
+	self.block_index = 1
+	self.blocks  = {}
+	
+	
 	for vertex_v in _buffer:
-	    print 'vertex', vertex_v
-	    self.busca_profunda ( edited_graph, vertex_v)
 	    
-	    print '\n'
+	    #'''
+	    vertex_v_already_in_blocks =  False
+	    #'''
+	    
+	    #'''
+	    #---------------------------------------------------
+	    # verifica se o vertex jah faz parte de algum bloco
+	    #---------------------------------------------------
+	    for block_index  in self.blocks:
+		 
+		 print 'vertex:',vertex_v, 'block:', block_index, 'items', self.blocks[block_index]
+		 
+		 if vertex_v in self.blocks[block_index]:
+		     #print vertex_v, self.blocks[self.block_index]
+		     vertex_v_already_in_blocks = True
+	    #---------------------------------------------------
+	    #'''
+	    
+	    '''
+	    #print vertex_v_already_in_blocks
+	    print self.blocks
+	    for block_index  in self.blocks:
+		print 'block:', block_index, 'items', self.blocks[block_index]
+	    #'''
+	    
+	    if vertex_v_already_in_blocks:
+		pass
+	    
+	    else:		
+		self.blocks[self.block_index] = []
+		print 'vertex', vertex_v
+		self.busca_profunda ( edited_graph, vertex_v)
+		print '\n'
+	    
+		self.block_index += 1
+		self.blocks[self.block_index] = []
+		
+	
+	print self.blocks
+
+    
     
     def busca_profunda (self, grafo, vertex_v):
 	""" Function doc """
 	
-	block  = []
-	block.append(vertex_v)
+	#block  = []
+	#block.append(vertex_v)
+	print vertex_v
+	
+	if vertex_v in self.blocks[self.block_index]:
+	    pass
+	else:
+	    self.blocks[self.block_index].append(vertex_v)
 	
 	for key in self.visited:
             self.visited[key] = False
@@ -273,6 +323,13 @@ class Graph(object):
 
         self.visited[vertex_w] = True
 	print vertex_w
+	
+	
+	if vertex_w in self.blocks[self.block_index]:
+	    pass
+	else:
+	    self.blocks[self.block_index].append(vertex_w)
+	
 	for vertex_k in grafo[vertex_w]:
             
 	    if self.visited[vertex_k] == False:

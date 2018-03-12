@@ -24,7 +24,7 @@
 from pprint import pprint
 import numpy as np
 import MolSystem
-
+import MolecularSystem
 
 
 '''
@@ -116,16 +116,15 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
     #pool  = multiprocessing.Pool(nCPUs)
     #pdb_file_lines  = frame.split('\n')   
     #atoms = (pool.map(parse_pdb_line, pdb_file_lines))
-    
-    
-    
-    
-    atoms  = []
-    frames = []
+
+    atoms             = []
+    frames            = []
     frame_coordinates = []
-    #print (raw_atoms)
+    
     for line in raw_atoms:
+    
         line = line.split()
+        index  = 0
         if len(line) > 1:
             #print (line) 
             index    = int(line[0])-1
@@ -134,11 +133,11 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
             
             at_pos   = np.array([float(line[2]), float(line[3]), float(line[4])])
             
-            at_resi = int(line[6])
-            
-            at_resn = line[6]
-            
-            at_ch   = 'X'          
+            at_resi  = int(line[6])
+                     
+            at_resn  = line[6]
+                     
+            at_ch    = 'X'          
             
 
             at_symbol = line[5].split('.')
@@ -146,31 +145,50 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
 
             at_charge = float(line[-1])*100
 
-            gridpos  = [int(at_pos[0]/gridsize), int(at_pos[1]/gridsize), int(at_pos[2]/gridsize)]
+            gridpos   = [int(at_pos[0]/gridsize), int(at_pos[1]/gridsize), int(at_pos[2]/gridsize)]
             
             #atoms.append([index, at_name,  at_pos, at_resi, at_resn, at_ch, at_symbol, [], gridpos ])
             
-            atom =  MolSystem.Atom (name         = at_name,
-                                    index        = index, 
-                                    symbol       = at_symbol, 
-                                    pos          = at_pos, 
-                                    resi         = at_resi, 
-                                    resn         = at_resn, 
-                                    chain        = at_ch, 
-                                    atom_id      = 0, 
-                                    molecule     = None,
-                                    charge       = at_charge
-                                    #Vobject_id   = None, 
-                                    #Vobject_name = '', 
-                                    #Vobject      = None
-                                    )
-
+            #atom =  MolSystem.Atom (name         = at_name,
+            #                        index        = index, 
+            #                        symbol       = at_symbol, 
+            #                        pos          = at_pos, 
+            #                        resi         = at_resi, 
+            #                        resn         = at_resn, 
+            #                        chain        = at_ch, 
+            #                        atom_id      = 0, 
+            #                        molecule     = None,
+            #                        charge       = at_charge
+            #                        #Vobject_id   = None, 
+            #                        #Vobject_name = '', 
+            #                        #Vobject      = None
+            #                        )
+            
+            
+            atom =  MolecularSystem.Atom(index        = index    , 
+                                         name         = at_name  ,
+                                         symbol       = at_symbol, 
+                                         atom_type    = None     , 
+                                         pos          = at_pos   , 
+                                         charge       = at_ch    ,
+                                         
+                                         sector       = None,
+                                         resi         = None, 
+                                         resn         = None, 
+                                         chain        = None, 
+                                         
+                                         bonds        = []  ,
+                                         molecule     = None,
+                                         )
+            
+            
 
             atoms.append(atom)
+            index += 1
     #print (atoms)
     return atoms
 
-def get_bonds (raw_bonds):
+def get_bonds (raw_bonds, atoms):
     """ Function doc """
     index_bonds              = []
     index_bonds_pairs        = []
@@ -202,7 +220,7 @@ def get_bonds (raw_bonds):
                 index_bonds      .append(atom2)
                 
                 bonds[index] = [atom1, atom2, order]
-                index_bonds_pairs.append([atom1,atom2])
+                index_bonds_pairs.append([atom1,atom2, order])
                 
                 bond_type[(atom1, atom2)] = order
                 bond_type[(atom2, atom1)] = order
@@ -220,10 +238,26 @@ def get_bonds (raw_bonds):
             
             index_bonds_pairs_orders.append(order)
         '''
-    print bond_type
+    #print bond_type
     #print index_bonds_pairs
     #return [bonds, index_bonds, index_bonds_pairs]
-    return bonds, index_bonds, index_bonds_pairs, bond_type
+    
+    Bonds = []
+    n = 0
+    for raw_bond in index_bonds_pairs:
+        index_a = raw_bond[0]
+        index_b = raw_bond[1]
+        b_type  = raw_bond[2]
+        bond =  MolecularSystem.Bond(index    = n             , 
+                                     atom1    = atoms[index_a], 
+                                     atom2    = atoms[index_b], 
+                                     b_type   = b_type        , 
+                                     sector   = None, 
+                                     molecule = None)
+        Bonds.append(bond)
+        n += 1
+    
+    return Bonds #bonds, index_bonds, index_bonds_pairs, bond_type
 
 
 
@@ -241,7 +275,7 @@ def parser_raw_mol2_info (raw_molecule, log = False):
     header        =  firstmolecule[0]
     firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
     raw_atoms     =  firstmolecule[0]
-    bonds         =  firstmolecule[1]
+    raw_bonds     =  firstmolecule[1]
    
     header    = header.split('\n')
     #print header
@@ -252,26 +286,54 @@ def parser_raw_mol2_info (raw_molecule, log = False):
     mol_info   = header[5]
     
     raw_atoms = raw_atoms.split('\n')
-    bonds     = bonds.split('\n')
+    raw_bonds = raw_bonds.split('\n')
     
     atoms = get_atom_list_from_mol2_frame(raw_atoms = raw_atoms, frame = True,  gridsize = 3)
-    bonds, index_bonds, index_bonds_pairs, bond_type = get_bonds(bonds)
+
+    #bonds, index_bonds, index_bonds_pairs, bond_type = get_bonds(raw_bonds, atoms)
+    Bonds = get_bonds(raw_bonds, atoms)
 
     
-    
-    molecule = MolSystem.Molecule ( name              = mol_name  ,
-                                    size              = mol_size  ,
-                                    _type             = mol_type  ,
-                                    charge            = mol_charge,
-                                    info              = mol_info  ,
-                                    index             = None         ,
+    #print 'Bonds', Bonds
+    #print 'Atoms', atoms
+    #print '\n\n'
+    #print index_bonds
+    #print '\n\n'
+    #print index_bonds_pairs
+    #print '\n\n'
 
-                                    atoms             = atoms     , 
-                                    bonds             = bonds     , 
-                                    index_bonds_pairs = index_bonds_pairs ,
-                                    bond_type         = bond_type         ,
-                                    )
-    return molecule
+    #molecule = MolSystem.Molecule ( name              = mol_name  ,
+    #                                size              = mol_size  ,
+    #                                _type             = mol_type  ,
+    #                                charge            = mol_charge,
+    #                                info              = mol_info  ,
+    #                                index             = None         ,
+    #
+    #                                atoms             = atoms     , 
+    #                                bonds             = bonds     , 
+    #                                index_bonds_pairs = index_bonds_pairs ,
+    #                                bond_type         = bond_type         ,
+    #                                )
+    #
+    
+    print 'Building molecule'
+    Molecule =  MolecularSystem.Molecule(index       = None     , 
+                                         name        = mol_name ,
+                                         atoms       = atoms    , 
+                                         bonds       = Bonds    , 
+                                         sectors     = []       ,
+                                         connections = []       
+                                         )
+    
+
+    Molecule.building_graph()
+    #Molecule.printAtoms()
+    #Molecule.printBonds()
+    print 'Molecule Done'
+    
+    
+    
+    return Molecule
 
 
 def load_mol2_files (infile = None, VMSession =  None, gridsize = 3):
@@ -313,9 +375,40 @@ def load_mol2_files (infile = None, VMSession =  None, gridsize = 3):
     return molecule_list
 
 
+def load_file (infile = None, EasyDockSession =  None, gridsize = 3):
+    """ Function doc """
+    print ('\nstarting: parse_mol2')
+    molecule_list = []
+    
+    
+    
+    with open(infile, 'r') as mol2_file:
+        pdbtext = mol2_file.read()
+
+        raw_molecules       =  pdbtext.split('@<TRIPOS>MOLECULE')
+        number_of_molecules = len(raw_molecules)
+        print ('Number of molecules:', number_of_molecules)
+        n = 1
+        
+        for raw_molecule in raw_molecules:        
+            if '@<TRIPOS>ATOM' in raw_molecule:
+                
+                print ('molecule', n, True )
+                molecule = parser_raw_mol2_info(raw_molecule, log = False)
+                molecule_list.append(molecule)
+            
+            else: 
+                print ('molecule', n, False)
+            n += 1            
+    
+               
+    return molecule_list
 
 
 
 
-load_mol2_files (infile = '/home/fernando/programs/EasyDock/mol2/com7.mol2', VMSession =  None, gridsize = 3)
+
+
+
+#load_mol2_files (infile = '/home/fernando/programs/EasyDock/mol2/com7.mol2', VMSession =  None, gridsize = 3)
 
